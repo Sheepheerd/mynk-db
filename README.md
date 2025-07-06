@@ -1,2 +1,3 @@
-# mynk-db
-mynk database
+# seperate?
+
+good central backend
