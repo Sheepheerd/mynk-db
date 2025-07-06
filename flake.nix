@@ -18,6 +18,9 @@
         } {
           packages = with pkgs;
             [
+              #test
+              sqlite
+
               clang-tools
               cmake
               codespell
