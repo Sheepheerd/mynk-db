@@ -23,6 +23,7 @@
 
               clang-tools
               cmake
+              libmicrohttpd
               codespell
               conan
               cppcheck
