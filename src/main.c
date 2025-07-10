@@ -18,7 +18,7 @@ enum MHD_Result answer_to_connection (void *cls, struct MHD_Connection *connecti
   printf("%s\n", url);
   printf("%s\n", method);
   // printf("%s\n", upload_data);
-  
+
   response = MHD_create_response_from_buffer (strlen (page),
                                             (void*) page, MHD_RESPMEM_PERSISTENT);
   enum MHD_Result ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
@@ -39,4 +39,3 @@ int main ()
   MHD_stop_daemon (daemon);
   return 0;
 }
-

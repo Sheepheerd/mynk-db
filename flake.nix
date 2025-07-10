@@ -18,9 +18,11 @@
         } {
           packages = with pkgs;
             [
-              #test
+              #packages
+              libmicrohttpd
               sqlite
 
+              # development
               clang-tools
               cmake
               libmicrohttpd
