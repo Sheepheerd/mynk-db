@@ -24,8 +24,9 @@
 
               # development
               clang-tools
+              astyle
+	      neovim
               cmake
-              libmicrohttpd
               codespell
               conan
               cppcheck

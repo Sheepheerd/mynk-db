@@ -14,7 +14,6 @@ enum MHD_Result answer_to_connection (void *cls, struct MHD_Connection *connecti
 {
     const char *page  = "<html><body>Hello, browser!</body></html>";
     struct MHD_Response *response;
-
     printf("%s\n", url);
     printf("%s\n", method);
     // printf("%s\n", upload_data);
