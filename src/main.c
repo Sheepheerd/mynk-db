@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "router.h"
-// #include "example_routes.h"
+#include "example_routes.h"
 
 
 #if defined(_MSC_VER) && _MSC_VER + 0 <= 1800
@@ -201,6 +201,20 @@ main ()
 {
     // Load in the router
     hello_from_router();
+    hello_from_example_routes();
+
+    // Play around with routes
+
+    Route r1 = {&hello_from_router};
+    Route r2 = {&another_route};
+    Route routes[] = {r1, r2};
+    // Handle Routes
+    for (int i = 0; i < 2; i++) {
+        printf("Handling route: %d\n", i);
+        Route r = routes[i];
+        r.handler();
+    };
+
     struct MHD_Daemon *daemon;
 
     daemon = MHD_start_daemon (MHD_USE_AUTO | MHD_USE_INTERNAL_POLLING_THREAD,
