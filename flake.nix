@@ -22,8 +22,9 @@
             rev = "3920f28431ecf82c9e7e78bbcb60fe473d87edf9";
             sha256 = "sha256-rN49u9rWrJFk6xloyFHUaHQjHK8dhiEhGdavBHPXth4=";
           };
-          nativeBuildInputs = [ pkgs.cmake ];
+          nativeBuildInputs = [ pkgs.cmake pkgs.pkg-config ];
           buildInputs = [ ];
+          cmakeFlags = [ "-DSHARED=True" ];
           meta = with pkgs.lib; {
             description = "A library of generic data structures for C";
             homepage = "https://github.com/srdja/Collections-C";
