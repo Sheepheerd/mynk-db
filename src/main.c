@@ -199,15 +199,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 int
 main ()
 {
-    // Load in the router
-    hello_from_router();
-    hello_from_example_routes();
-
     // Play around with routes
+    register_route(&another_route);
+    register_route(&hello_from_router);
 
-    Route r1 = {&hello_from_router};
-    Route r2 = {&another_route};
-    Route routes[] = {r1, r2};
     // Handle Routes
     for (int i = 0; i < 2; i++) {
         printf("Handling route: %d\n", i);
