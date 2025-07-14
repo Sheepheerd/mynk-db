@@ -138,62 +138,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
     (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    if (NULL == *con_cls)
-    {
-        struct connection_info_struct *con_info;
+    result = router.route(method, url);
 
-        con_info = malloc (sizeof (struct connection_info_struct));
-        if (NULL == con_info)
-            return MHD_NO;
-        con_info->answerstring = NULL;
-
-        if (0 == strcmp (method, "POST"))
-        {
-            con_info->postprocessor =
-            MHD_create_post_processor (connection, POSTBUFFERSIZE,
-                                       iterate_post, (void *) con_info);
-
-            if (NULL == con_info->postprocessor)
-            {
-                free (con_info);
-                return MHD_NO;
-            }
-
-            con_info->connectiontype = POST;
-        }
-        else
-            con_info->connectiontype = GET;
-
-        *con_cls = (void *) con_info;
-
-        return MHD_YES;
-    }
-
-    if (0 == strcmp (method, "GET"))
-    {
-        return send_page (connection, askpage);
-    }
-
-    if (0 == strcmp (method, "POST"))
-    {
-        struct connection_info_struct *con_info = *con_cls;
-
-        if (*upload_data_size != 0)
-        {
-            MHD_post_process (con_info->postprocessor, upload_data,
-                              *upload_data_size);
-            *upload_data_size = 0;
-            printf("Post Proccess Just ran.\n");
-
-            return MHD_YES;
-        }
-        else if (NULL != con_info->answerstring) {
-            printf("Sending\n");
-            return send_page (connection, con_info->answerstring);
-        }
-    }
-
-    return send_page (connection, errorpage);
+    // Send Result Dynamically
+    return send_page (connection, result);
 }
 
 int
@@ -203,12 +151,7 @@ main ()
     register_route(&another_route);
     register_route(&hello_from_router);
 
-    // Handle Routes
-    for (int i = 0; i < 2; i++) {
-        printf("Handling route: %d\n", i);
-        Route r = routes[i];
-        r.handler();
-    };
+
 
     struct MHD_Daemon *daemon;
 
