@@ -1,23 +1,29 @@
 #include <stdio.h>
 #include "router.h"
+#include <collectc/cc_hashtable.h>
 
-Route routes[10];
-int route_count = 0;
 
-void register_route(void (*endpoint)()) {
-    if (route_count >= 2) {
-        return;
+
+CC_HashTable *routes = NULL;
+
+void router_init() {
+    if (cc_hashtable_new(&routes) != CC_OK) {
+        printf("Bad thing happen");
     }
-
-    Route new_route = {endpoint};
-    routes[route_count] = new_route;
-    route_count++;
 }
 
-void route(method, url) {
-    result = r.handler();
-
-    return result;
+void register_route(void (*endpoint)(), const char *url) {
+    Route *new_route = malloc(sizeof(Route));
+    new_route->handler = endpoint;
+    cc_hashtable_add(routes, url, new_route);
 }
 
-Router router = {&router_logic};
+int route(const char *method, const char *url) {
+    void *r;
+    cc_hashtable_get(routes, url, &r);
+    Route *route = (Route *)r;
+    route->handler();
+    return 1;
+}
+
+Router router = {&route};

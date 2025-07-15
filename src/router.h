@@ -1,20 +1,18 @@
 #ifndef ROUTER_H
 #define ROUTER_H
+#include "collectc/cc_hashtable.h"
 
 typedef struct Router {
-  void (*route)(void);
+  int (*route)(const char *, const char *);
 } Router;
 
-extern Router router;
+extern CC_HashTable *routes;
 
-void hello_from_router();
-void another_route();
-void register_route(void (*endpoint)());
-void router_logic();
+void register_route(void (*endpoint)(), const char *url);
+void router_init();
 
 typedef struct Route {
   void (*handler)(void);
 } Route;
 
-extern Route routes[10];
 #endif

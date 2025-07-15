@@ -138,10 +138,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
     (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    result = router.route(method, url);
+    int result = router.route(method, url);
 
     // Send Result Dynamically
-    return send_page (connection, result);
+    return send_page (connection, errorpage);
 }
 
 int
@@ -150,8 +150,6 @@ main ()
     // Play around with routes
     register_route(&another_route);
     register_route(&hello_from_router);
-
-
 
     struct MHD_Daemon *daemon;
 
