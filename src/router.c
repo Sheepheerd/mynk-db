@@ -23,7 +23,6 @@ int route(const char *method, const char *url) {
 
 void router_init() {
     router = malloc(sizeof(Router));
-    router->route = &route;
     if (cc_hashtable_new(&routes) != CC_OK) {
         printf("Bad thing happen");
     }

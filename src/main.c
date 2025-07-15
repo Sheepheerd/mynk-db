@@ -138,7 +138,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
     // (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    int result = router->route(method, url);
+    int result = route(method, url);
     printf("The Url is: %s\n", url);
 
     // Send Result Dynamically

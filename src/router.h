@@ -11,6 +11,7 @@ extern Router *router;
 
 void register_route(void (*endpoint)(), const char *url);
 void router_init();
+int route(const char *method, const char *url);
 
 typedef struct Route {
   void (*handler)(void);
