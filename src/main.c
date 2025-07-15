@@ -135,10 +135,11 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
                       size_t *upload_data_size, void **con_cls)
 {
     (void) cls;               /* Unused. Silent compiler warning. */
-    (void) url;               /* Unused. Silent compiler warning. */
+    // (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    int result = router.route(method, url);
+    int result = router->route(method, url);
+    printf("The Url is: %s\n", url);
 
     // Send Result Dynamically
     return send_page (connection, errorpage);
@@ -147,9 +148,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 int
 main ()
 {
+    router_init();
     // Play around with routes
-    register_route(&another_route);
-    register_route(&hello_from_router);
+    register_route(&another_route, "/test");
+    register_route(&hello_from_router, "/hello");
 
     struct MHD_Daemon *daemon;
 

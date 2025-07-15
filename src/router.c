@@ -5,12 +5,7 @@
 
 
 CC_HashTable *routes = NULL;
-
-void router_init() {
-    if (cc_hashtable_new(&routes) != CC_OK) {
-        printf("Bad thing happen");
-    }
-}
+Router *router = NULL;
 
 void register_route(void (*endpoint)(), const char *url) {
     Route *new_route = malloc(sizeof(Route));
@@ -19,11 +14,17 @@ void register_route(void (*endpoint)(), const char *url) {
 }
 
 int route(const char *method, const char *url) {
-    void *r;
+    void *r = NULL;
     cc_hashtable_get(routes, url, &r);
     Route *route = (Route *)r;
     route->handler();
     return 1;
 }
 
-Router router = {&route};
+void router_init() {
+    router = malloc(sizeof(Router));
+    router->route = &route;
+    if (cc_hashtable_new(&routes) != CC_OK) {
+        printf("Bad thing happen");
+    }
+}

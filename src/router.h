@@ -7,6 +7,7 @@ typedef struct Router {
 } Router;
 
 extern CC_HashTable *routes;
+extern Router *router;
 
 void register_route(void (*endpoint)(), const char *url);
 void router_init();
