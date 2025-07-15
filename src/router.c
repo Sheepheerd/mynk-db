@@ -7,18 +7,20 @@
 CC_HashTable *routes = NULL;
 Router *router = NULL;
 
-void register_route(void (*endpoint)(), const char *url) {
+void register_route(char* (*endpoint)(), const char *url) {
     Route *new_route = malloc(sizeof(Route));
     new_route->handler = endpoint;
     cc_hashtable_add(routes, url, new_route);
 }
 
-int route(const char *method, const char *url) {
+char* route(const char *method, const char *url) {
     void *r = NULL;
     cc_hashtable_get(routes, url, &r);
     Route *route = (Route *)r;
-    route->handler();
-    return 1;
+    // char* result = route->handler();
+    char *bundle_of_sticks = "joe hogan";
+    // printf("%zu\n", strlen(result));
+    return bundle_of_sticks;
 }
 
 void router_init() {
