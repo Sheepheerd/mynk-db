@@ -1,38 +1,32 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "router.h"
 
-char* hello_from_router() {
-
-    size_t bufsize = 128;       // initial buffer size
-    char *buffer = malloc(bufsize);
-    if (!buffer) return NULL;   // check allocation
-
-    size_t pos = 0;
-    int c;
-
-
-    while ((c = getchar()) != '\n' && c != EOF) {
-        buffer[pos++] = (char)c;
-
-        // Resize if needed
-        if (pos >= bufsize) {
-            bufsize *= 2;
-            char *new_buffer = realloc(buffer, bufsize);
-            if (!new_buffer) {
-                free(buffer);
-                return NULL;
-            }
-            buffer = new_buffer;
-        }
+char *hello_from_router() {
+    const char *filename = "./file_to_be_read_from"; // File path for goober in project root
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        return NULL;
     }
-    buffer[pos] = '\0';  // null-terminate string
+
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buffer = (char *)malloc(file_size + 1);
+    if (!buffer) {
+        fclose(file);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(buffer, 1, file_size, file);
+    buffer[bytes_read] = '\0'; // Null terminate the string
+
+    fclose(file);
     return buffer;
-
-
-
 }
 
 char* another_route() {
     printf("Hello From another_route\n");
+    return "";
 }

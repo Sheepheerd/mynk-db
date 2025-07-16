@@ -51,15 +51,12 @@ const char *errorpage =
 static enum MHD_Result
 send_page (struct MHD_Connection *connection, char *page)
 {
-    free(page);
     enum MHD_Result ret;
     struct MHD_Response *response;
 
 
-    // printf("The page be here: %zu\n", strlen(page));
-    const char *gay = "gay";
     response =
-    MHD_create_response_from_buffer (strlen (gay), (void *) gay,
+    MHD_create_response_from_buffer (strlen (page), (void *) page,
                                      MHD_RESPMEM_MUST_FREE);
     if (! response)
         return MHD_NO;
@@ -144,8 +141,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 
     char *result = route(method, url);
 
-
-    // Send Result Dynamically
+    // // Send Result Dynamically
     return send_page (connection, result);
 }
 
