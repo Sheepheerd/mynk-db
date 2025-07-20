@@ -49,7 +49,7 @@ const char *errorpage =
 
 
 static enum MHD_Result
-send_page (struct MHD_Connection *connection, const char *page)
+send_page (struct MHD_Connection *connection, char *page)
 {
     enum MHD_Result ret;
     struct MHD_Response *response;
@@ -57,12 +57,13 @@ send_page (struct MHD_Connection *connection, const char *page)
 
     response =
     MHD_create_response_from_buffer (strlen (page), (void *) page,
-                                     MHD_RESPMEM_PERSISTENT);
+                                     MHD_RESPMEM_MUST_FREE);
     if (! response)
         return MHD_NO;
 
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
+
 
     return ret;
 }
@@ -138,11 +139,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
     // (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    int result = route(method, url);
-    printf("The Url is: %s\n", url);
+    char *result = route(method, url);
 
-    // Send Result Dynamically
-    return send_page (connection, errorpage);
+    // // Send Result Dynamically
+    return send_page (connection, result);
 }
 
 int
