@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "router.h"
 
 char *hello_from_router() {
     const char *filename = "./file_to_be_read_from"; // File path for goober in project root
@@ -26,7 +27,7 @@ char *hello_from_router() {
     return buffer;
 }
 
-char* another_route() {
+char *another_route() {
     printf("Hello From another_route\n");
-    return "";
+    return response_string("A Simple Test\n");
 }

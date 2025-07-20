@@ -1,6 +1,9 @@
+#include <stddef.h>
 #include <stdio.h>
 #include "router.h"
+#include "string.h"
 #include <collectc/cc_hashtable.h>
+#include <stdlib.h>
 
 
 
@@ -26,4 +29,13 @@ void router_init() {
     if (cc_hashtable_new(&routes) != CC_OK) {
         printf("Bad thing happen");
     }
+}
+
+
+char *response_string(char *response_string) {
+    size_t len = strlen(response_string) + 1;
+    char *respCopy = malloc(len);
+    memcpy(respCopy, response_string, len);
+    return respCopy;
+
 }
