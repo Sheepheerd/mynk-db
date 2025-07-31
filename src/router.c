@@ -30,7 +30,7 @@ void register_route(char* (*endpoint)(), char *url, const char *method) {
     cc_hashtable_add(routes, url, new_route);
 }
 
-char *route(const char *method, char *url, char* post_body) {
+char *route(const char *method, char *url, char* post_body, struct MHD_Connection *connection) {
     struct connection_info_struct *con_info;
 
     con_info = malloc (sizeof (struct connection_info_struct));
@@ -48,8 +48,8 @@ char *route(const char *method, char *url, char* post_body) {
         //
     } else {
         con_info->postprocessor =
-            MHD_create_post_processor (connection, POSTBUFFERSIZE,
-                                       iterate_post, (void *) con_info);
+            MHD_create_post_processor (connection, 10,
+                                       route->iterator, (void *) con_info);
     }
 
     // printf("this is what route->hanlder is returning: %s\n", route->handler());

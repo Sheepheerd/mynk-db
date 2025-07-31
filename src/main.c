@@ -139,7 +139,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
     // (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    char *result = route(method, url);
+    char *result = route(method, url, upload_data, connection);
 
     // // Send Result Dynamically
     return send_page (connection, result);
