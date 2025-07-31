@@ -9,13 +9,14 @@ typedef struct Router {
 extern CC_HashTable *routes;
 extern Router *router;
 
-void register_route(char *(*endpoint)(), char *url);
+void register_route(char *(*endpoint)(), char *url, const char *method);
 void router_init();
-char *route(const char *method, char *url);
+char *route(const char *method, char *url, char *post_body);
 char *response_string(char *response_string);
 
 typedef struct Route {
-  char *(*handler)(void);
+  char *(*handler)(char *);
+  char *(*iterator)(void);
 } Route;
 
 #endif

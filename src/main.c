@@ -23,7 +23,7 @@
 #define MAXNAMESIZE     20
 #define MAXANSWERSIZE   512
 
-#define GET             0
+#define GET             NULL
 #define POST            1
 
 struct connection_info_struct
@@ -150,8 +150,8 @@ main ()
 {
     router_init();
     // Play around with routes
-    register_route(&another_route, "/test");
-    register_route(&hello_from_router, "/hello");
+    register_route(&another_route, "/test", GET);
+    register_route(&hello_from_router, "/hello", GET);
 
     struct MHD_Daemon *daemon;
 

@@ -4,24 +4,56 @@
 #include "string.h"
 #include <collectc/cc_hashtable.h>
 #include <stdlib.h>
+#include <microhttpd.h>
 
 
+CC_HashTable *post_routes = NULL;
+CC_HashTable *get_routes = NULL;
 
-CC_HashTable *routes = NULL;
 Router *router = NULL;
 
-void register_route(char* (*endpoint)(), char *url) {
+
+
+struct connection_info_struct
+{
+    int connectiontype;
+    char *answerstring;
+    struct MHD_PostProcessor *postprocessor;
+};
+
+
+
+void register_route(char* (*endpoint)(), char *url, const char *method) {
+
     Route *new_route = malloc(sizeof(Route));
     new_route->handler = endpoint;
     cc_hashtable_add(routes, url, new_route);
 }
 
-char *route(const char *method, char *url) {
+char *route(const char *method, char *url, char* post_body) {
+    struct connection_info_struct *con_info;
+
+    con_info = malloc (sizeof (struct connection_info_struct));
+    if (NULL == con_info)
+        return MHD_NO;
+    con_info->answerstring = NULL;
+
     void *r = NULL;
-    cc_hashtable_get(routes, url, &r);
+
+    cc_hashtable_get(post_body != NULL ? get_routes : post_routes, url, &r);
+
     Route *route = (Route *)r;
+    if (post_body != NULL)
+    {
+        //
+    } else {
+        con_info->postprocessor =
+            MHD_create_post_processor (connection, POSTBUFFERSIZE,
+                                       iterate_post, (void *) con_info);
+    }
+
     // printf("this is what route->hanlder is returning: %s\n", route->handler());
-    return route->handler();
+    return route->handler(post_body);
 }
 
 void router_init() {
