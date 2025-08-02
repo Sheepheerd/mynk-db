@@ -69,41 +69,6 @@ send_page (struct MHD_Connection *connection, char *page)
 }
 
 
-static enum MHD_Result
-iterate_post (void *coninfo_cls, enum MHD_ValueKind kind, const char *key,
-              const char *filename, const char *content_type,
-              const char *transfer_encoding, const char *data, uint64_t off,
-              size_t size)
-{
-    struct connection_info_struct *con_info = coninfo_cls;
-    (void) kind;               /* Unused. Silent compiler warning. */
-    (void) filename;           /* Unused. Silent compiler warning. */
-    (void) content_type;       /* Unused. Silent compiler warning. */
-    (void) transfer_encoding;  /* Unused. Silent compiler warning. */
-    (void) off;                /* Unused. Silent compiler warning. */
-
-    if (0 == strcmp (key, "name"))
-    {
-        if ((size > 0) && (size <= MAXNAMESIZE))
-        {
-            char *answerstring;
-            answerstring = malloc (MAXANSWERSIZE);
-            if (! answerstring)
-                return MHD_NO;
-
-            snprintf (answerstring, MAXANSWERSIZE, greetingpage, data);
-            con_info->answerstring = answerstring;
-            printf("Iterating Post found: %s\n", con_info->answerstring);
-        }
-        else
-            con_info->answerstring = NULL;
-
-        return MHD_NO;
-    }
-
-    return MHD_YES;
-}
-
 
 static void
 request_completed (void *cls, struct MHD_Connection *connection,
@@ -128,7 +93,6 @@ request_completed (void *cls, struct MHD_Connection *connection,
     *con_cls = NULL;
 }
 
-
 static enum MHD_Result
 answer_to_connection (void *cls, struct MHD_Connection *connection,
                       const char *url, const char *method,
@@ -136,14 +100,70 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
                       size_t *upload_data_size, void **con_cls)
 {
     (void) cls;               /* Unused. Silent compiler warning. */
-    // (void) url;               /* Unused. Silent compiler warning. */
+    (void) url;               /* Unused. Silent compiler warning. */
     (void) version;           /* Unused. Silent compiler warning. */
 
-    char *result = route(method, url);
+    if (NULL == *con_cls)
+    {
+        struct connection_info_struct *con_info;
 
-    // // Send Result Dynamically
-    return send_page (connection, result);
+        con_info = malloc (sizeof (struct connection_info_struct));
+        if (NULL == con_info)
+            return MHD_NO;
+        con_info->answerstring = NULL;
+
+        if (0 == strcmp (method, "POST"))
+        {
+
+            con_info->connectiontype = POST;
+        }
+        else
+            con_info->connectiontype = GET;
+
+        *con_cls = (void *) con_info;
+
+        return MHD_YES;
+    }
+
+    if (0 == strcmp (method, "GET"))
+    {
+        char *result = route(method, url);
+        return send_page (connection, result);
+    }
+
+    if (0 == strcmp (method, "POST"))
+    {
+        struct connection_info_struct *con_info = *con_cls;
+
+        if (*upload_data_size != 0)
+        {
+            char *answerstring = malloc(*upload_data_size + 1);
+            if (!answerstring)
+                return MHD_NO;
+            memcpy(answerstring, upload_data, *upload_data_size);
+            answerstring[*upload_data_size] = '\0';
+            if (con_info->answerstring)
+                free(con_info->answerstring);
+            con_info->answerstring = answerstring;
+            printf("Processing Post: %s\n", con_info->answerstring);
+            *upload_data_size = 0;
+            return MHD_YES;
+        }
+        else if (con_info->answerstring)
+        {
+            enum MHD_Result ret = send_page(connection, con_info->answerstring);
+            con_info->answerstring = NULL; // Prevent double free
+            return ret;
+        }
+    }
+
+// char *result = route(method, url);
+// return send_page(connection, result);
+    return send_page (connection, "goober");
 }
+
+
+
 
 int
 main ()
