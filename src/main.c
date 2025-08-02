@@ -1,3 +1,4 @@
+#include "parser.h"
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/select.h>
@@ -5,6 +6,7 @@
 #else
 #include <winsock2.h>
 #endif
+#include <cjson/cJSON.h>
 #include <microhttpd.h>
 #include <stdio.h>
 #include <string.h>
@@ -30,7 +32,6 @@ struct connection_info_struct
 {
     int connectiontype;
     char *answerstring;
-    struct MHD_PostProcessor *postprocessor;
 };
 
 const char *askpage =
@@ -84,7 +85,6 @@ request_completed (void *cls, struct MHD_Connection *connection,
 
     if (con_info->connectiontype == POST)
     {
-        MHD_destroy_post_processor (con_info->postprocessor);
         if (con_info->answerstring)
             free (con_info->answerstring);
     }
@@ -131,32 +131,45 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
         return send_page (connection, result);
     }
 
-    if (0 == strcmp (method, "POST"))
+    if (0 == strcmp(method, "POST"))
     {
         struct connection_info_struct *con_info = *con_cls;
 
         if (*upload_data_size != 0)
         {
             char *answerstring = malloc(*upload_data_size + 1);
+
             if (!answerstring)
                 return MHD_NO;
+
             memcpy(answerstring, upload_data, *upload_data_size);
+
             answerstring[*upload_data_size] = '\0';
+
             if (con_info->answerstring)
                 free(con_info->answerstring);
+
             con_info->answerstring = answerstring;
-            printf("Processing Post: %s\n", con_info->answerstring);
+
+            // create parser
+            int value = sync_parse(con_info->answerstring);
+            if (value == 0) {
+                free(con_info->answerstring);
+                con_info->answerstring = NULL;
+                *upload_data_size = 0;
+                return MHD_YES;
+            }
+
             *upload_data_size = 0;
             return MHD_YES;
         }
         else if (con_info->answerstring)
         {
             enum MHD_Result ret = send_page(connection, con_info->answerstring);
-            con_info->answerstring = NULL; // Prevent double free
+            con_info->answerstring = NULL;
             return ret;
         }
     }
-
 // char *result = route(method, url);
 // return send_page(connection, result);
     return send_page (connection, "goober");
@@ -172,6 +185,12 @@ main ()
     // Play around with routes
     register_route(&another_route, "/test");
     register_route(&hello_from_router, "/hello");
+
+    // initialize router
+
+    // initialize database
+
+    // start server
 
     struct MHD_Daemon *daemon;
 

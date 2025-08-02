@@ -3,15 +3,23 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-  outputs = inputs:
+  outputs =
+    inputs:
     let
-      supportedSystems =
-        [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-      forEachSupportedSystem = f:
-        inputs.nixpkgs.lib.genAttrs supportedSystems
-        (system: f { pkgs = import inputs.nixpkgs { inherit system; }; });
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      forEachSupportedSystem =
+        f:
+        inputs.nixpkgs.lib.genAttrs supportedSystems (
+          system: f { pkgs = import inputs.nixpkgs { inherit system; }; }
+        );
 
-      collections-c = { pkgs }:
+      collections-c =
+        { pkgs }:
         pkgs.stdenv.mkDerivation rec {
           pname = "collections-c";
           version = "unstable-2025-07-13";
@@ -22,7 +30,10 @@
             rev = "3920f28431ecf82c9e7e78bbcb60fe473d87edf9";
             sha256 = "sha256-rN49u9rWrJFk6xloyFHUaHQjHK8dhiEhGdavBHPXth4=";
           };
-          nativeBuildInputs = [ pkgs.cmake pkgs.pkg-config ];
+          nativeBuildInputs = [
+            pkgs.cmake
+            pkgs.pkg-config
+          ];
           buildInputs = [ ];
           cmakeFlags = [ "-DSHARED=True" ];
           meta = with pkgs.lib; {
@@ -32,32 +43,39 @@
             platforms = platforms.all;
           };
         };
-    in {
-      devShells = forEachSupportedSystem ({ pkgs }: {
-        default = pkgs.mkShell.override { } {
-          packages = with pkgs;
-            [
-              # c libraries in nixpkgs
-              libmicrohttpd
-              sqlite
+    in
+    {
+      devShells = forEachSupportedSystem (
+        { pkgs }:
+        {
+          default = pkgs.mkShell.override { } {
+            packages =
+              with pkgs;
+              [
+                # c libraries in nixpkgs
+                libmicrohttpd
+                sqlite
+                cjson
 
-              # Development tools
-              clang-tools
-              astyle
-              cmake
-              codespell
-              conan
-              cppcheck
-              doxygen
-              gtest
-              lcov
-              vcpkg
-              vcpkg-tool
+                # Development tools
+                clang-tools
+                astyle
+                cmake
+                codespell
+                conan
+                cppcheck
+                doxygen
+                gtest
+                lcov
+                vcpkg
+                vcpkg-tool
 
-              # Add Collections-C
-              (collections-c { inherit pkgs; })
-            ] ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
-        };
-      });
+                # Add Collections-C
+                (collections-c { inherit pkgs; })
+              ]
+              ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
+          };
+        }
+      );
     };
 }

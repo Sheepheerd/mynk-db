@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall
-LDFLAGS = -lmicrohttpd -lcollectc
+LDFLAGS = -lmicrohttpd -lcollectc -lcjson -lsqlite3
 
 SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))

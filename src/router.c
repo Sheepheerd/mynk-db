@@ -16,7 +16,7 @@ void register_route(char* (*endpoint)(), char *url) {
     cc_hashtable_add(routes, url, new_route);
 }
 
-char *route(const char *method, char *url) {
+char *route(const char *method, const char *url) {
     void *r = NULL;
     cc_hashtable_get(routes, url, &r);
     Route *route = (Route *)r;
