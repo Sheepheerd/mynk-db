@@ -24,7 +24,6 @@
 #define POST "POST"
 
 struct connection_info_struct {
-    char *connectiontype;
     char *answerstring;
     size_t data_size;
 };
@@ -55,11 +54,7 @@ static void request_completed(void *cls, struct MHD_Connection *connection,
     struct connection_info_struct *con_info = *con_cls;
     if (!con_info) return;
 
-    if (strcmp(con_info->connectiontype, POST) == 0 && con_info->answerstring) {
-        free(con_info->answerstring);
-    }
 
-    free(con_info->connectiontype);
     free(con_info);
     *con_cls = NULL;
 }
@@ -76,11 +71,6 @@ static enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *co
         if (!con_info) return MHD_NO;
         con_info->answerstring = NULL;
         con_info->data_size = 0;
-        con_info->connectiontype = strdup(strcmp(method, POST) == 0 ? POST : GET);
-        if (!con_info->connectiontype) {
-            free(con_info);
-            return MHD_NO;
-        }
         *con_cls = (void *)con_info;
         return MHD_YES;
     }
