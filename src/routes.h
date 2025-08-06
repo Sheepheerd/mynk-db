@@ -6,10 +6,10 @@
 #include <stdlib.h>
 
 
-char *another_route(const char *data);
+char *get_hello(const char *data);
 
-char *hello_from_router(const char *data);
+char *get_test(const char *data);
 
-char *parse_sync(const char *data);
+char *post_sync(const char *data);
 
 #endif

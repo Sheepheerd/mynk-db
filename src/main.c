@@ -1,3 +1,4 @@
+#include "routes.h"
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/select.h>
@@ -10,7 +11,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "router.h"
-#include "example_routes.h"
 
 #if defined(_MSC_VER) && _MSC_VER <= 1800
 #endif
@@ -76,12 +76,10 @@ static enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *co
     }
 
     if (strcmp(method, GET) == 0) {
-        // THIS IS WHERE YOU HANDLE GET DATA
         char *result = route(router, method, url, NULL);
         if (!result) {
             return send_page(connection, strdup("404 Not Found"));
         }
-        // TODO
         return send_page(connection, result);
     }
 
@@ -110,8 +108,6 @@ static enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *co
             *upload_data_size = 0;
             return MHD_YES;
         } else {
-            // TODO
-            // THIS IS WHERE YOU HANDLE POST DATA
             char *result = route(router, method, url, con_info->answerstring);
             if (!result) {
                 return send_page(connection, strdup("404 Not Found"));
@@ -135,9 +131,9 @@ int main() {
         return 1;
     }
 
-    register_route(router, GET, "/test", &another_route);
-    register_route(router, GET, "/hello", &hello_from_router);
-    register_route(router, POST, "/sync", &parse_sync);
+    register_route(router, GET, "/test", &get_test);
+    register_route(router, GET, "/hello", &get_hello);
+    register_route(router, POST, "/sync", &post_sync);
 
     struct MHD_Daemon *daemon = MHD_start_daemon(
                                     MHD_USE_AUTO | MHD_USE_INTERNAL_POLLING_THREAD,

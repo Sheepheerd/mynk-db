@@ -1,4 +1,4 @@
-#include "example_routes.h"
+#include "routes.h"
 #include <stdio.h>
 
 char *another_route(const char *data) {
