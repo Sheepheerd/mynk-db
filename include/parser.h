@@ -1,7 +1,7 @@
 #ifndef PARSER
 #define PARSER
 
-int parse_sync_post(char *data);
+int parse_post_sync(char *data);
 
 #endif
 

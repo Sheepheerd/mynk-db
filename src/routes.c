@@ -8,6 +8,7 @@
 */
 
 
+///GET
 char *get_test(const char *data) {
     (void)data;
     return strdup("Response from /test\n");
@@ -18,11 +19,13 @@ char *get_hello(const char *data) {
     return strdup("Hello from router!\n");
 }
 
+
+///POST
 char *post_sync(const char *data) {
     if (!data) {
         return strdup("400");
     }
-    parse_sync_post(data);
+    parse_post_sync(data);
 
     return strdup(data);
 }
