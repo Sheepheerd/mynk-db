@@ -1,4 +1,5 @@
-#include "router/router.h"
+#include "router.h"
+#include "routes.h"
 
 #include <sys/types.h>
 #ifndef _WIN32

@@ -2,8 +2,6 @@
 #define ROUTER_H
 
 #include <collectc/cc_hashtable.h>
-#include <string.h>
-#include "routes.h"
 
 typedef struct {
     char *(*handler)(const char *data);

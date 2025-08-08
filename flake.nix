@@ -54,7 +54,6 @@
               [
                 # c libraries in nixpkgs
                 libmicrohttpd
-                sqlite
                 cjson
 
                 # Development tools

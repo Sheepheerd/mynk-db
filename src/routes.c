@@ -1,5 +1,5 @@
 #include "routes.h"
-#include <stdio.h>
+#include "parser.h"
 
 /*
 * NOTES
@@ -20,7 +20,9 @@ char *get_hello(const char *data) {
 
 char *post_sync(const char *data) {
     if (!data) {
-        return strdup("No POST data provided");
+        return strdup("400");
     }
+    parse_sync_post(data);
+
     return strdup(data);
 }
