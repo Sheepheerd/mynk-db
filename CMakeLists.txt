@@ -11,7 +11,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 find_library(MICROHTTPD_LIBRARY microhttpd)
 find_library(COLLECTC_LIBRARY collectc)
 find_library(CJSON_LIBRARY cjson)
-find_library(SQLITE3_LIBRARY sqlite3)
 
 if(NOT MICROHTTPD_LIBRARY)
     message(FATAL_ERROR "libmicrohttpd not found")
@@ -22,9 +21,6 @@ endif()
 if(NOT CJSON_LIBRARY)
     message(FATAL_ERROR "libcjson not found")
 endif()
-if(NOT SQLITE3_LIBRARY)
-    message(FATAL_ERROR "libsqlite3 not found")
-endif()
 
 file(GLOB SOURCES "src/*.c")
 
@@ -34,7 +30,6 @@ target_link_libraries(my-c-program PRIVATE
     ${MICROHTTPD_LIBRARY}
     ${COLLECTC_LIBRARY}
     ${CJSON_LIBRARY}
-    ${SQLITE3_LIBRARY}
 )
 
 set_target_properties(my-c-program PROPERTIES
