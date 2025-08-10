@@ -1,4 +1,5 @@
 #include "database.h"
+#include "collectc/cc_hashtable.h"
 #include "unistd.h"
 #include <stdio.h>
 #include <time.h>
@@ -26,6 +27,24 @@ int init_storage() {
     //     }
     // }
     // return 1;
+}
+
+static char *create_conflict_filename(const char *filename, const char *device_id) {
+    time_t now = time(NULL);
+    char timestamp[16];
+    strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", gmtime(&now));
+
+    char *ext = strrchr(filename, '.');
+    size_t base_len = ext ? (ext - filename) : strlen(filename);
+    char *conflict_filename = malloc(base_len + strlen(".sync-conflict-") + strlen(timestamp) + strlen("-") + strlen(device_id) + (ext ? strlen(ext) : 0) + 1);
+    if (!conflict_filename) {
+        fprintf(stderr, "Failed to allocate conflict filename\n");
+        return NULL;
+    }
+
+    snprintf(conflict_filename, base_len + 1, "%s", filename);
+    sprintf(conflict_filename + base_len, ".sync-conflict-%s-%s%s", timestamp, device_id, ext ? ext : "");
+    return conflict_filename;
 }
 
 static int create_parent_dirs(const char *path) {
@@ -68,23 +87,20 @@ static int create_parent_dirs(const char *path) {
 }
 
 int save_file_and_metadata(const char *filename, int version, const char *contents, const char *hash, const char *action) {
-    // Ensure parent directories exist
     if (!create_parent_dirs(filename)) {
         fprintf(stderr, "Failed to create parent directories for %s\n", filename);
         return 0;
     }
 
-    // Save file to disk
     char *path = malloc(strlen(SYNC_FILES_DIR) + strlen(filename) + 1);
     if (!path) {
         fprintf(stderr, "Failed to allocate path\n");
         return 0;
     }
-
     sprintf(path, "%s%s", SYNC_FILES_DIR, filename);
 
-    if (access(path, F_OK) == 0) {
-        fprintf(stderr, "File Already Exists\n", path, strerror(errno));
+    if (strcmp(action, "edit") != 0 && strcmp(action, "conflict_only") != 0 && access(path, F_OK) == 0) {
+        fprintf(stderr, "File already exists: %s\n", path);
         free(path);
         return 0;
     }
@@ -105,79 +121,105 @@ int save_file_and_metadata(const char *filename, int version, const char *conten
 
     fclose(file);
 
-    cJSON *metadata = cJSON_CreateObject();
-    if (!metadata) {
-        fprintf(stderr, "Failed to create metadata object\n");
-        free(path);
-        return 0;
-    }
+    if (strcmp(action, "conflict_only") != 0) {
+        cJSON *metadata = cJSON_CreateObject();
+        if (!metadata) {
+            fprintf(stderr, "Failed to create metadata object\n");
+            free(path);
+            return 0;
+        }
 
-    cJSON_AddStringToObject(metadata, "filename", filename);
-    cJSON_AddNumberToObject(metadata, "version", version);
-    cJSON_AddStringToObject(metadata, "hash", hash);
-    cJSON_AddStringToObject(metadata, "path", path);
+        cJSON_AddStringToObject(metadata, "filename", filename);
+        cJSON_AddNumberToObject(metadata, "version", version);
+        cJSON_AddStringToObject(metadata, "hash", hash);
+        cJSON_AddStringToObject(metadata, "path", path);
 
-    time_t now = time(NULL);
-    char timestamp[32];
-    strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
-    cJSON_AddStringToObject(metadata, "last_modified", timestamp);
+        time_t now = time(NULL);
+        char timestamp[32];
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
+        cJSON_AddStringToObject(metadata, "last_modified", timestamp);
 
-    // Ensure metadata directory exists
-    struct stat st = {0};
-    if (stat(SYNC_METADATA_DIR, &st) == -1) {
-        if (mkdir(SYNC_METADATA_DIR, 0700) != 0 && errno != EEXIST) {
-            fprintf(stderr, "Failed to create %s: %s\n", SYNC_METADATA_DIR, strerror(errno));
+        struct stat st = {0};
+        if (stat(SYNC_METADATA_DIR, &st) == -1) {
+            if (mkdir(SYNC_METADATA_DIR, 0700) != 0 && errno != EEXIST) {
+                fprintf(stderr, "Failed to create %s: %s\n", SYNC_METADATA_DIR, strerror(errno));
+                cJSON_Delete(metadata);
+                free(path);
+                return 0;
+            }
+        }
+
+        char *meta_path = malloc(strlen(SYNC_METADATA_DIR) + strlen(filename) + 6);
+        if (!meta_path) {
+            fprintf(stderr, "Failed to allocate metadata path\n");
             cJSON_Delete(metadata);
             free(path);
             return 0;
         }
-    }
+        sprintf(meta_path, "%s%s.json", SYNC_METADATA_DIR, filename);
 
-    char *meta_path = malloc(strlen(SYNC_METADATA_DIR) + strlen(filename) + 6);
-    if (!meta_path) {
-        fprintf(stderr, "Failed to allocate metadata path\n");
-        cJSON_Delete(metadata);
-        free(path);
-        return 0;
-    }
-    sprintf(meta_path, "%s%s.json", SYNC_METADATA_DIR, filename);
+        FILE *meta_file = fopen(meta_path, "w");
+        if (!meta_file) {
+            fprintf(stderr, "Failed to open metadata file %s: %s\n", meta_path, strerror(errno));
+            cJSON_Delete(metadata);
+            free(path);
+            free(meta_path);
+            return 0;
+        }
 
-    FILE *meta_file = fopen(meta_path, "w");
-    if (!meta_file) {
-        fprintf(stderr, "Failed to open metadata file %s: %s\n", meta_path, strerror(errno));
-        cJSON_Delete(metadata);
-        free(path);
-        free(meta_path);
-        return 0;
-    }
+        char *meta_str = cJSON_Print(metadata);
+        if (!meta_str || fwrite(meta_str, 1, strlen(meta_str), meta_file) != strlen(meta_str)) {
+            fprintf(stderr, "Failed to write metadata to %s\n", meta_path);
+            cJSON_Delete(metadata);
+            free(meta_str);
+            free(path);
+            free(meta_path);
+            fclose(meta_file);
+            return 0;
+        }
 
-    char *meta_str = cJSON_Print(metadata);
-    if (!meta_str || fwrite(meta_str, 1, strlen(meta_str), meta_file) != strlen(meta_str)) {
-        fprintf(stderr, "Failed to write metadata to %s\n", meta_path);
+        fclose(meta_file);
         cJSON_Delete(metadata);
         free(meta_str);
-        free(path);
         free(meta_path);
-        fclose(meta_file);
-        return 0;
     }
-
-    fclose(meta_file);
-    cJSON_Delete(metadata);
-    free(meta_str);
-    free(meta_path);
 
     free(path);
     return 1;
 }
 
+int edit_file_and_metadata(const char *filename, int version, const char *contents, const char *hash, const char *action) {
+    cJSON *existing_metadata = load_file_and_metadata(filename);
+    int existing_version = -1;
+
+    if (existing_metadata) {
+        cJSON *version_item = cJSON_GetObjectItemCaseSensitive(existing_metadata, "version");
+        if (cJSON_IsNumber(version_item)) {
+            existing_version = version_item->valueint;
+        }
+        cJSON_Delete(existing_metadata);
+    }
+
+    if (existing_version == version) {
+        char device_id[16];
+        snprintf(device_id, sizeof(device_id), "DEVICE_%d", (int)time(NULL) % 10000);
+        char *conflict_filename = create_conflict_filename(filename, device_id);
+        if (!conflict_filename) {
+            return 0;
+        }
+
+        int result = save_file_and_metadata(conflict_filename, version, contents, hash, "conflict_only");
+        free(conflict_filename);
+        return result;
+    }
+
+    if (version > existing_version) {
+        return save_file_and_metadata(filename, version, contents, hash, action);
+    }
+
+    fprintf(stderr, "Version %d is not greater than existing version %d for %s\n", version, existing_version, filename);
+    return 0;
+}
 
 int delete_file_and_metadata(const char *filename, int version, const char *contents, const char *hash, const char *action) {
-}
-
-cJSON *load_file_and_metadata(const char *filename) {
-
-}
-cJSON *get_missing_files(cJSON *summary) {
-
 }

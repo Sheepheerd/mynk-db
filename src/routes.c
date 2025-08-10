@@ -25,7 +25,6 @@ char *post_sync(const char *data) {
     if (!data) {
         return strdup("400");
     }
-    parse_post_sync(data);
 
-    return strdup(data);
+    return strdup(parse_post_sync(data));
 }
