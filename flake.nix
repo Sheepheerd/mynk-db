@@ -57,6 +57,7 @@
                 cjson
 
                 # Development tools
+                valgrind
                 clang-tools
                 astyle
                 cmake
