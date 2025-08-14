@@ -23,7 +23,7 @@ char *parse_post_sync(const char *data) {
     }
 
     cJSON *files = cJSON_GetObjectItemCaseSensitive(json, "files");
-    if (files && cJSON_IsArray(files)) {
+    if (files && cJSON_IsArray(files) && cJSON_GetArraySize(files) > 0) {
         cJSON *file;
         cJSON_ArrayForEach(file, files) {
             if (!cJSON_IsObject(file)) {
@@ -67,6 +67,9 @@ char *parse_post_sync(const char *data) {
             }
         }
     }
+
+
+    printf("TEST\n");
 
     cJSON *summary = cJSON_GetObjectItemCaseSensitive(json, "summary");
     if (!cJSON_IsArray(summary)) {
