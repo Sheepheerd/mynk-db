@@ -345,7 +345,7 @@ cJSON *get_missing_files(cJSON *summary) {
                             continue;
                         }
                         cJSON *sum_filename = cJSON_GetObjectItemCaseSensitive(summary_item, "filename");
-                        cJSON *sum_hash = cJSON_GetObjectItemCaseSensitive(summary_item, "contents_hash");
+                        cJSON *sum_hash = cJSON_GetObjectItemCaseSensitive(summary_item, "hash");
                         if (cJSON_IsString(sum_filename) && cJSON_IsString(sum_hash) &&
                                 strcmp(sum_filename->valuestring, local_filename) == 0) {
                             found_in_summary = 1;
