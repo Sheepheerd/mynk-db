@@ -1,5 +1,5 @@
 {
-  description = "C development flake";
+  description = "A Nix-flake-based Python development environment";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
@@ -15,65 +15,53 @@
       forEachSupportedSystem =
         f:
         inputs.nixpkgs.lib.genAttrs supportedSystems (
-          system: f { pkgs = import inputs.nixpkgs { inherit system; }; }
+          system:
+          f {
+            pkgs = import inputs.nixpkgs { inherit system; };
+          }
         );
-
-      collections-c =
-        { pkgs }:
-        pkgs.stdenv.mkDerivation rec {
-          pname = "collections-c";
-          version = "unstable-2025-07-13";
-
-          src = pkgs.fetchFromGitHub {
-            owner = "srdja";
-            repo = "Collections-C";
-            rev = "3920f28431ecf82c9e7e78bbcb60fe473d87edf9";
-            sha256 = "sha256-rN49u9rWrJFk6xloyFHUaHQjHK8dhiEhGdavBHPXth4=";
-          };
-          nativeBuildInputs = [
-            pkgs.cmake
-            pkgs.pkg-config
-          ];
-          buildInputs = [ ];
-          cmakeFlags = [ "-DSHARED=True" ];
-          meta = with pkgs.lib; {
-            description = "A library of generic data structures for C";
-            homepage = "https://github.com/srdja/Collections-C";
-            license = licenses.lgpl3;
-            platforms = platforms.all;
-          };
-        };
+      version = "3.13";
     in
     {
       devShells = forEachSupportedSystem (
         { pkgs }:
+        let
+          concatMajorMinor =
+            v:
+            pkgs.lib.pipe v [
+              pkgs.lib.versions.splitVersion
+              (pkgs.lib.sublist 0 2)
+              pkgs.lib.concatStrings
+            ];
+
+          python = pkgs."python${concatMajorMinor version}";
+        in
         {
-          default = pkgs.mkShell.override { } {
-            packages =
-              with pkgs;
-              [
-                # c libraries in nixpkgs
-                libmicrohttpd
-                cjson
+          default = pkgs.mkShell {
+            venvDir = ".venv";
 
-                # Development tools
-                valgrind
-                clang-tools
-                astyle
-                cmake
-                codespell
-                conan
-                cppcheck
-                doxygen
-                gtest
-                lcov
-                vcpkg
-                vcpkg-tool
+            postShellHook = ''
+              venvVersionWarn() {
+              	local venvVersion
+              	venvVersion="$("$venvDir/bin/python" -c 'import platform; print(platform.python_version())')"
 
-                # Add Collections-C
-                (collections-c { inherit pkgs; })
-              ]
-              ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
+              	[[ "$venvVersion" == "${python.version}" ]] && return
+
+              	cat <<EOF
+              Warning: Python version mismatch: [$venvVersion (venv)] != [${python.version}]
+                       Delete '$venvDir' and reload to rebuild for version ${python.version}
+              EOF
+              }
+
+              venvVersionWarn
+            '';
+
+            packages = with python.pkgs; [
+              venvShellHook
+              pip
+              flask
+              werkzeug
+            ];
           };
         }
       );
