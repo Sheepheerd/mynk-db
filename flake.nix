@@ -58,9 +58,8 @@
 
             packages = with python.pkgs; [
               venvShellHook
-              pip
-              flask
-              werkzeug
+              fastapi-cli
+              fastapi
             ];
           };
         }
