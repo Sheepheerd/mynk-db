@@ -75,3 +75,5 @@ Brewfile.lock.json
 .cache
 
 src/server_files
+
+__pycache__/
