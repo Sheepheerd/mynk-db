@@ -60,6 +60,7 @@
               venvShellHook
               fastapi-cli
               fastapi
+              python-multipart
             ];
           };
         }
